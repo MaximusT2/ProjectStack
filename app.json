@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Workshop Folio",
+    "slug": "project-cars-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "primaryColor": "#287BC1",
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app requires access to the camera to take photos of your project cars and workshop logs.",
+        "NSPhotoLibraryUsageDescription": "This app requires access to your photo library to select photos for your project cars."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#287BC1",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}
