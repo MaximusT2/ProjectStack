@@ -18,8 +18,15 @@ import { useProjects } from '../context/ProjectsContext';
 import { Header } from '../components/Header';
 import { BottomTabBar } from '../components/BottomTabBar';
 import { DiscardDialog } from '../components/DiscardDialog';
-import { CarIllustration } from '../components/CarIllustration';
-import { LogType, DeviceLogType, ExpenseCategory } from '../types';
+import { LogType, ExpenseCategory } from '../types';
+
+const LOG_TYPE_LABELS: Record<LogType, string> = {
+  'new-part': 'New part',
+  repair: 'Repair',
+  inspection: 'Inspection',
+  note: 'Note',
+  'car-photo': 'Photo',
+};
 
 interface SavePhotoScreenProps {
   navigation: any;
@@ -40,9 +47,6 @@ export const SavePhotoScreen: React.FC<SavePhotoScreenProps> = ({ navigation }) 
   const [specificPart, setSpecificPart] = useState('Coilover fit');
   const [costAmount, setCostAmount] = useState('');
 
-  const [deviceProject, setDeviceProject] = useState('none');
-  const [deviceLogType, setDeviceLogType] = useState<DeviceLogType>('local-photo');
-
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
   const [isDiscardDialogOpen, setIsDiscardDialogOpen] = useState(false);
@@ -53,6 +57,10 @@ export const SavePhotoScreen: React.FC<SavePhotoScreenProps> = ({ navigation }) 
   const [isLogTypeDropdownOpen, setIsLogTypeDropdownOpen] = useState(false);
 
   const selectedProjectObj = projects.find((p) => p.id === targetProjectId) || projects[0];
+  const isCarPhoto = logType === 'car-photo';
+  const previewSubtitle = isCarPhoto || !specificPart.trim()
+    ? undefined
+    : `${specificPart.trim()} · Detail view`;
 
   const handleRetakePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -68,32 +76,39 @@ export const SavePhotoScreen: React.FC<SavePhotoScreenProps> = ({ navigation }) 
     if (!result.canceled && result.assets[0].uri) {
       setCurrentDraftPhoto({
         uri: result.assets[0].uri,
-        title: 'Workshop capture',
-        subtitle: 'F: Coilover fitment · Detail view',
+        title: isCarPhoto ? 'Car photo' : 'Workshop capture',
       });
       setIsDirty(true);
     }
   };
 
   const handleLogAndSave = async () => {
+    if (isCarPhoto && !currentDraftPhoto?.uri) {
+      Alert.alert('Photo required', 'Take a photo before saving a car photo log.');
+      return;
+    }
+
     setIsSaving(true);
     setSaveStatus(null);
 
     setTimeout(() => {
       // 1. Add photo to project
       addPhotoToProject(targetProjectId, {
-        title: specificPart ? `${specificPart} install` : 'Workshop photo',
-        caption: `Log: ${logType} · ${selectedProjectObj?.title}`,
+        title: isCarPhoto
+          ? `${selectedProjectObj?.title || 'Car'} photo`
+          : specificPart
+          ? `${specificPart} install`
+          : 'Workshop photo',
+        caption: `Log: ${LOG_TYPE_LABELS[logType]} · ${selectedProjectObj?.title}`,
         uri: currentDraftPhoto?.uri,
-        localAsset: !currentDraftPhoto?.uri ? require('../../assets/cars/bmw-e30.jpeg') : undefined,
         logType,
-        specificPart,
+        specificPart: isCarPhoto ? undefined : specificPart,
         date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
       });
 
       // 2. If cost was entered, also log as an expense!
       const numericCost = parseFloat(costAmount.replace(/[^0-9.]/g, ''));
-      if (numericCost && numericCost > 0) {
+      if (numericCost && numericCost > 0 && !isCarPhoto) {
         let cat: ExpenseCategory = 'parts';
         if (logType === 'repair') cat = 'labor';
         else if (logType === 'inspection') cat = 'wof_reg';
@@ -150,13 +165,7 @@ export const SavePhotoScreen: React.FC<SavePhotoScreenProps> = ({ navigation }) 
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         {/* Header */}
-        <Header
-          title="Save photo"
-          leftType="back"
-          onLeftPress={handleBackPress}
-          rightType="settings"
-          onRightPress={() => {}}
-        />
+        <Header title="Gallery" leftType="back" onLeftPress={handleBackPress} />
 
         <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
           {/* Photo Preview Frame */}
@@ -164,15 +173,28 @@ export const SavePhotoScreen: React.FC<SavePhotoScreenProps> = ({ navigation }) 
             {currentDraftPhoto?.uri ? (
               <Image source={{ uri: currentDraftPhoto.uri }} style={styles.previewImage} resizeMode="cover" />
             ) : (
-              <CarIllustration width="100%" height="100%" />
+              <View style={styles.previewPlaceholder}>
+                <Feather name="image" size={24} color={theme.colors.inkLight} />
+                <Text style={styles.previewPlaceholderText}>No image yet</Text>
+              </View>
             )}
           </View>
 
           {/* Photo Info & Retake */}
           <View style={styles.previewInfo}>
             <Text style={styles.previewHeading}>Photo preview</Text>
-            <Text style={styles.previewTitle}>Last taken: Coilover install</Text>
-            <Text style={styles.previewSubtitle}>F: Coilover fitment · Detail view</Text>
+            {currentDraftPhoto?.uri ? (
+              <>
+                <Text style={styles.previewTitle}>
+                  Last taken: {currentDraftPhoto.title || 'Workshop photo'}
+                </Text>
+                {previewSubtitle ? (
+                  <Text style={styles.previewSubtitle}>{previewSubtitle}</Text>
+                ) : null}
+              </>
+            ) : (
+              <Text style={styles.previewTitle}>No photo selected</Text>
+            )}
 
             <TouchableOpacity style={styles.retakeButton} onPress={handleRetakePhoto} activeOpacity={0.7}>
               <Feather name="camera" size={16} color={theme.colors.ink} />
@@ -226,21 +248,13 @@ export const SavePhotoScreen: React.FC<SavePhotoScreenProps> = ({ navigation }) 
                   onPress={() => setIsLogTypeDropdownOpen(!isLogTypeDropdownOpen)}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.selectText}>
-                    {logType === 'new-part'
-                      ? 'New part'
-                      : logType === 'repair'
-                      ? 'Repair'
-                      : logType === 'inspection'
-                      ? 'Inspection'
-                      : 'Note'}
-                  </Text>
+                  <Text style={styles.selectText}>{LOG_TYPE_LABELS[logType]}</Text>
                   <Feather name="chevron-down" size={18} color={theme.colors.ink} />
                 </TouchableOpacity>
 
                 {isLogTypeDropdownOpen && (
                   <View style={styles.dropdownMenu}>
-                    {(['new-part', 'repair', 'inspection', 'note'] as const).map((type) => (
+                    {(Object.keys(LOG_TYPE_LABELS) as LogType[]).map((type) => (
                       <TouchableOpacity
                         key={type}
                         style={[styles.dropdownItem, logType === type && styles.dropdownItemSelected]}
@@ -251,13 +265,7 @@ export const SavePhotoScreen: React.FC<SavePhotoScreenProps> = ({ navigation }) 
                         }}
                       >
                         <Text style={[styles.dropdownItemText, logType === type && styles.dropdownItemTextSelected]}>
-                          {type === 'new-part'
-                            ? 'New part'
-                            : type === 'repair'
-                            ? 'Repair'
-                            : type === 'inspection'
-                            ? 'Inspection'
-                            : 'Note'}
+                          {LOG_TYPE_LABELS[type]}
                         </Text>
                       </TouchableOpacity>
                     ))}
@@ -266,12 +274,13 @@ export const SavePhotoScreen: React.FC<SavePhotoScreenProps> = ({ navigation }) 
               </View>
 
               {/* Specific Part Input */}
-              <View style={styles.fieldGroup}>
+              {!isCarPhoto && <View style={styles.fieldGroup}>
                 <Text style={styles.fieldLabel}>
                   Specific part <Text style={styles.optionalText}>(optional)</Text>
                 </Text>
                 <TextInput
                   style={styles.textInput}
+                  underlineColorAndroid="transparent"
                   value={specificPart}
                   onChangeText={(val) => {
                     setSpecificPart(val);
@@ -280,15 +289,16 @@ export const SavePhotoScreen: React.FC<SavePhotoScreenProps> = ({ navigation }) 
                   placeholder="e.g. Coilover fit"
                   placeholderTextColor={theme.colors.inkLight}
                 />
-              </View>
+              </View>}
 
               {/* Expense Cost ($) Input */}
-              <View style={styles.fieldGroup}>
+              {!isCarPhoto && <View style={styles.fieldGroup}>
                 <Text style={styles.fieldLabel}>
                   Cost ($) <Text style={styles.optionalText}>(optional expense tracking)</Text>
                 </Text>
                 <TextInput
                   style={styles.textInput}
+                  underlineColorAndroid="transparent"
                   value={costAmount}
                   keyboardType="numeric"
                   onChangeText={(val) => {
@@ -298,7 +308,7 @@ export const SavePhotoScreen: React.FC<SavePhotoScreenProps> = ({ navigation }) 
                   placeholder="e.g. 1950 (auto-adds to build expenses)"
                   placeholderTextColor={theme.colors.inkLight}
                 />
-              </View>
+              </View>}
 
               {/* Status feedback */}
               {saveStatus && (
@@ -410,6 +420,17 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  previewPlaceholder: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  previewPlaceholderText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.inkLight,
+  },
   previewInfo: {
     gap: 4,
   },
@@ -516,6 +537,8 @@ const styles = StyleSheet.create({
   },
   textInput: {
     height: 48,
+    outlineWidth: 0,
+    outlineColor: 'transparent',
     backgroundColor: theme.colors.pale,
     borderWidth: 1.5,
     borderColor: theme.colors.ink,

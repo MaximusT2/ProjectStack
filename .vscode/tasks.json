@@ -1,0 +1,12 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Expo: Start Web Preview",
+      "type": "shell",
+      "command": "npm run web -- --localhost --port 8081",
+      "isBackground": true,
+      "problemMatcher": []
+    }
+  ]
+}

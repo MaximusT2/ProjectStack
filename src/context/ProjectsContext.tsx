@@ -7,6 +7,9 @@ interface ProjectsContextType {
   selectedProjectId: string;
   setSelectedProjectId: (id: string) => void;
   getProject: (id: string) => ProjectCar | undefined;
+  updateSpec: (projectId: string, specId: string, field: 'label' | 'value', value: string) => void;
+  addSpec: (projectId: string) => void;
+  deleteSpec: (projectId: string, specId: string) => void;
   toggleChecklistItem: (projectId: string, itemId: string) => void;
   addChecklistItem: (projectId: string, text: string) => void;
   deleteChecklistItem: (projectId: string, itemId: string) => void;
@@ -15,8 +18,8 @@ interface ProjectsContextType {
   deleteExpenseFromProject: (projectId: string, expenseId: string) => void;
   addProject: (project: Omit<ProjectCar, 'id'>) => void;
   deleteProject: (projectId: string) => void;
-  currentDraftPhoto: { uri?: string; title?: string; subtitle?: string } | null;
-  setCurrentDraftPhoto: (photo: { uri?: string; title?: string; subtitle?: string } | null) => void;
+  currentDraftPhoto: { uri?: string; title?: string } | null;
+  setCurrentDraftPhoto: (photo: { uri?: string; title?: string } | null) => void;
 }
 
 const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined);
@@ -24,13 +27,50 @@ const ProjectsContext = createContext<ProjectsContextType | undefined>(undefined
 export const ProjectsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [projects, setProjects] = useState<ProjectCar[]>(INITIAL_PROJECTS);
   const [selectedProjectId, setSelectedProjectId] = useState<string>('bmw-e30-drift-build');
-  const [currentDraftPhoto, setCurrentDraftPhoto] = useState<{ uri?: string; title?: string; subtitle?: string } | null>({
+  const [currentDraftPhoto, setCurrentDraftPhoto] = useState<{ uri?: string; title?: string } | null>({
     uri: undefined,
     title: 'Coilover install',
-    subtitle: 'F: Coilover fitment · Detail view',
   });
 
   const getProject = (id: string) => projects.find((p) => p.id === id);
+
+  const updateSpec = (projectId: string, specId: string, field: 'label' | 'value', value: string) => {
+    setProjects((prev) =>
+      prev.map((project) =>
+        project.id !== projectId
+          ? project
+          : {
+              ...project,
+              specs: project.specs.map((spec) =>
+                spec.id === specId ? { ...spec, [field]: value } : spec
+              ),
+            }
+      )
+    );
+  };
+
+  const addSpec = (projectId: string) => {
+    const newSpec: SpecItem = {
+      id: `${projectId}-spec-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      label: '',
+      value: '',
+    };
+    setProjects((prev) =>
+      prev.map((project) =>
+        project.id === projectId ? { ...project, specs: [...project.specs, newSpec] } : project
+      )
+    );
+  };
+
+  const deleteSpec = (projectId: string, specId: string) => {
+    setProjects((prev) =>
+      prev.map((project) =>
+        project.id === projectId
+          ? { ...project, specs: project.specs.filter((spec) => spec.id !== specId) }
+          : project
+      )
+    );
+  };
 
   const toggleChecklistItem = (projectId: string, itemId: string) => {
     setProjects((prev) =>
@@ -171,6 +211,9 @@ export const ProjectsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         selectedProjectId,
         setSelectedProjectId,
         getProject,
+        updateSpec,
+        addSpec,
+        deleteSpec,
         toggleChecklistItem,
         addChecklistItem,
         deleteChecklistItem,

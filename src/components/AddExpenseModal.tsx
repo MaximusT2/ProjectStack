@@ -77,6 +77,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ visible, onClo
             <Text style={styles.fieldLabel}>Expense Item / Description *</Text>
             <TextInput
               style={styles.textInput}
+              underlineColorAndroid="transparent"
               placeholder="e.g. WOF Inspection & 12mo Rego"
               placeholderTextColor={theme.colors.inkLight}
               value={title}
@@ -89,6 +90,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ visible, onClo
             <Text style={styles.fieldLabel}>Amount ($) *</Text>
             <TextInput
               style={styles.textInput}
+              underlineColorAndroid="transparent"
               placeholder="e.g. 185"
               placeholderTextColor={theme.colors.inkLight}
               keyboardType="numeric"
@@ -129,6 +131,7 @@ export const AddExpenseModal: React.FC<AddExpenseModalProps> = ({ visible, onClo
             <Text style={styles.fieldLabel}>Notes & Details (Optional)</Text>
             <TextInput
               style={[styles.textInput, styles.textArea]}
+              underlineColorAndroid="transparent"
               placeholder="e.g. Completed at VTNZ with no recheck required."
               placeholderTextColor={theme.colors.inkLight}
               multiline
@@ -192,6 +195,8 @@ const styles = StyleSheet.create({
   },
   textInput: {
     height: 48,
+    outlineWidth: 0,
+    outlineColor: 'transparent',
     backgroundColor: theme.colors.pale,
     borderWidth: 1.5,
     borderColor: theme.colors.ink,

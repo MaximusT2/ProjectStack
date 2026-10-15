@@ -1,15 +1,17 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons, Feather } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import { theme } from '../theme/theme';
 
 interface HeaderProps {
   title: string;
   leftType?: 'menu' | 'back' | 'none';
   onLeftPress?: () => void;
-  rightType?: 'settings' | 'add' | 'close' | 'none';
+  rightType?: 'add' | 'close' | 'none';
   onRightPress?: () => void;
+  rightAccessory?: React.ReactNode;
   isAddActive?: boolean;
+  showBottomBorder?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -18,10 +20,12 @@ export const Header: React.FC<HeaderProps> = ({
   onLeftPress,
   rightType = 'none',
   onRightPress,
+  rightAccessory,
   isAddActive = false,
+  showBottomBorder = true,
 }) => {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, !showBottomBorder && styles.noBottomBorder]}>
       <View style={styles.content}>
         {leftType === 'menu' && (
           <TouchableOpacity
@@ -51,40 +55,33 @@ export const Header: React.FC<HeaderProps> = ({
           {title}
         </Text>
 
-        {rightType === 'settings' && (
-          <TouchableOpacity
-            activeOpacity={0.7}
-            style={styles.actionButton}
-            onPress={onRightPress}
-            accessibilityLabel="Settings"
-          >
-            <Feather name="settings" size={22} color={theme.colors.paper} />
-          </TouchableOpacity>
-        )}
+        <View style={styles.rightActions}>
+          {rightAccessory}
 
-        {rightType === 'add' && (
-          <TouchableOpacity
-            activeOpacity={0.7}
-            style={[styles.actionButton, isAddActive && styles.actionButtonRotated]}
-            onPress={onRightPress}
-            accessibilityLabel="Add project"
-          >
-            <Feather name="plus" size={24} color={theme.colors.paper} />
-          </TouchableOpacity>
-        )}
+          {rightType === 'add' && (
+            <TouchableOpacity
+              activeOpacity={0.7}
+              style={[styles.actionButton, isAddActive && styles.actionButtonRotated]}
+              onPress={onRightPress}
+              accessibilityLabel="Add project"
+            >
+              <Feather name="plus" size={24} color={theme.colors.paper} />
+            </TouchableOpacity>
+          )}
 
-        {rightType === 'close' && (
-          <TouchableOpacity
-            activeOpacity={0.7}
-            style={styles.actionButton}
-            onPress={onRightPress}
-            accessibilityLabel="Close"
-          >
-            <Feather name="x" size={23} color={theme.colors.paper} />
-          </TouchableOpacity>
-        )}
+          {rightType === 'close' && (
+            <TouchableOpacity
+              activeOpacity={0.7}
+              style={styles.actionButton}
+              onPress={onRightPress}
+              accessibilityLabel="Close"
+            >
+              <Feather name="x" size={23} color={theme.colors.paper} />
+            </TouchableOpacity>
+          )}
 
-        {rightType === 'none' && <View style={styles.actionButtonEmpty} />}
+          {rightType === 'none' && !rightAccessory && <View style={styles.actionButtonEmpty} />}
+        </View>
       </View>
     </View>
   );
@@ -92,9 +89,14 @@ export const Header: React.FC<HeaderProps> = ({
 
 const styles = StyleSheet.create({
   container: {
+    position: 'relative',
+    zIndex: 20,
     backgroundColor: theme.colors.cobalt,
     borderBottomWidth: theme.borders.ink.borderWidth,
     borderBottomColor: theme.borders.ink.borderColor,
+  },
+  noBottomBorder: {
+    borderBottomWidth: 0,
   },
   content: {
     height: 56,
@@ -102,6 +104,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 8,
+  },
+  rightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   actionButton: {
     width: 44,

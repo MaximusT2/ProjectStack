@@ -22,8 +22,6 @@ export const INITIAL_PROJECTS: ProjectCar[] = [
       { id: 'hs-2', label: 'Oil', value: '15W-50 Full Synthetic' },
       { id: 'hs-3', label: 'Coolant', value: 'Red OAT (50/50 mix)' },
       { id: 'hs-4', label: 'Tires', value: '235/40R18 Square' },
-      { id: 'hs-5', label: 'Fuel', value: '98 Octane Premium' },
-      { id: 'hs-6', label: 'Parts sources', value: 'Holden Heritage / MACE' },
     ],
     photos: [
       {
@@ -69,8 +67,6 @@ export const INITIAL_PROJECTS: ProjectCar[] = [
       { id: 'e30s-2', label: 'Oil', value: '10W-60 Synthetic (e.g., Castrol Edge)' },
       { id: 'e30s-3', label: 'Coolant', value: 'BMW Blue (50/50 mix)' },
       { id: 'e30s-4', label: 'Tires', value: 'F: 215/45R17 · R: 235/40R17' },
-      { id: 'e30s-5', label: 'Fuel', value: 'E85 Flex Fuel' },
-      { id: 'e30s-6', label: 'Parts sources', value: 'List/Links' },
     ],
     photos: [
       {
@@ -119,8 +115,6 @@ export const INITIAL_PROJECTS: ProjectCar[] = [
       { id: 'b3s-2', label: 'Oil', value: '5W-40 LL-01 Synthetic' },
       { id: 'b3s-3', label: 'Coolant', value: 'BMW Blue (50/50 mix)' },
       { id: 'b3s-4', label: 'Tires', value: '225/45R17 Michelin PS4' },
-      { id: 'b3s-5', label: 'Fuel', value: '98 Octane Premium' },
-      { id: 'b3s-6', label: 'Parts sources', value: 'FCP Euro / ECS' },
     ],
     photos: [
       {
@@ -156,8 +150,6 @@ export const INITIAL_PROJECTS: ProjectCar[] = [
       { id: 'tcs-2', label: 'Oil', value: '0W-20 Full Synthetic' },
       { id: 'tcs-3', label: 'Coolant', value: 'Toyota Super Long Life (Pink)' },
       { id: 'tcs-4', label: 'Tires', value: '205/55R16 All-Season' },
-      { id: 'tcs-5', label: 'Fuel', value: '91 Regular Unleaded' },
-      { id: 'tcs-6', label: 'Parts sources', value: 'OEM Toyota Parts' },
     ],
     photos: [
       {

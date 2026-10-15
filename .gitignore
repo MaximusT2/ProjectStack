@@ -1,5 +1,6 @@
 # Node / React Native artefacts
 node_modules/
+.expo/
 dist/
 build/
 *.log

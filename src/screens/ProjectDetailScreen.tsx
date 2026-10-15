@@ -20,7 +20,6 @@ import { PhotoViewerModal } from '../components/PhotoViewerModal';
 import { SwipeableChecklistRow } from '../components/SwipeableChecklistRow';
 import { SwipeableExpenseRow } from '../components/SwipeableExpenseRow';
 import { AddExpenseModal } from '../components/AddExpenseModal';
-import { CarIllustration } from '../components/CarIllustration';
 import { PhotoItem, ExpenseCategory } from '../types';
 
 interface ProjectDetailScreenProps {
@@ -32,6 +31,9 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({ route,
   const { projectId } = route.params || { projectId: 'bmw-e30-drift-build' };
   const {
     getProject,
+    updateSpec,
+    addSpec,
+    deleteSpec,
     toggleChecklistItem,
     addChecklistItem,
     deleteChecklistItem,
@@ -41,7 +43,6 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({ route,
 
   const project = getProject(projectId);
 
-  const [showIllustration, setShowIllustration] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<PhotoItem | null>(null);
   const [isPhotoViewerOpen, setIsPhotoViewerOpen] = useState(false);
   const [isAllPhotosModalOpen, setIsAllPhotosModalOpen] = useState(false);
@@ -49,6 +50,7 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({ route,
   const [selectedExpenseFilter, setSelectedExpenseFilter] = useState<'all' | ExpenseCategory>('all');
   const [newChecklistText, setNewChecklistText] = useState('');
   const [isAddingChecklist, setIsAddingChecklist] = useState(false);
+  const [isEditingSpecs, setIsEditingSpecs] = useState(false);
 
   if (!project) {
     return (
@@ -66,6 +68,9 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({ route,
   const completedCount = project.checklist.filter((item) => item.completed).length;
   const totalCount = project.checklist.length;
   const percentCompleted = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+  const visibleSpecs = project.specs.filter(
+    (spec) => !['fuel', 'parts sources'].includes(spec.label.trim().toLowerCase())
+  );
 
   // 3 most recent photos (latest added first)
   const recentPhotos = [...project.photos].slice(-3).reverse();
@@ -109,37 +114,20 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({ route,
           title={project.title}
           leftType="back"
           onLeftPress={() => navigation.goBack()}
-          rightType="settings"
-          onRightPress={() => {}}
         />
 
         {/* Scrollable Main Content */}
         <ScrollView style={styles.scrollArea} contentContainerStyle={styles.scrollContent}>
           {/* Hero Window */}
           <View style={styles.heroWindow}>
-            {showIllustration ? (
-              <CarIllustration width="100%" height="100%" />
-            ) : project.image ? (
+            {project.image ? (
               <Image source={project.image} style={styles.heroPhoto} resizeMode="cover" />
             ) : (
-              <CarIllustration width="100%" height="100%" />
+              <View style={styles.heroPlaceholder}>
+                <Feather name="image" size={24} color={theme.colors.inkLight} />
+                <Text style={styles.heroPlaceholderText}>No image yet</Text>
+              </View>
             )}
-
-            {/* View Mode Toggle Switch */}
-            <TouchableOpacity
-              style={styles.heroToggle}
-              activeOpacity={0.8}
-              onPress={() => setShowIllustration(!showIllustration)}
-            >
-              <Ionicons
-                name={showIllustration ? 'image' : 'color-palette'}
-                size={14}
-                color={theme.colors.paper}
-              />
-              <Text style={styles.heroToggleText}>
-                {showIllustration ? 'Photo view' : 'Blueprint view'}
-              </Text>
-            </TouchableOpacity>
           </View>
 
           {/* Checklist Module */}
@@ -169,6 +157,7 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({ route,
               <View style={styles.addChecklistRow}>
                 <TextInput
                   style={styles.addChecklistInput}
+                  underlineColorAndroid="transparent"
                   placeholder="New task item..."
                   placeholderTextColor={theme.colors.inkLight}
                   value={newChecklistText}
@@ -305,16 +294,74 @@ export const ProjectDetailScreen: React.FC<ProjectDetailScreenProps> = ({ route,
 
           {/* Technical Specifications Module */}
           <View style={styles.inkModule}>
-            <Text style={[styles.sectionHeading, { marginBottom: 8 }]}>Technical specifications</Text>
-            {project.specs.map((spec, index) => (
+            <View style={[styles.moduleHeader, styles.specModuleHeader]}>
+              <Text style={styles.sectionHeading}>Technical specifications</Text>
+              <TouchableOpacity
+                style={styles.editSpecsButton}
+                onPress={() => setIsEditingSpecs((editing) => !editing)}
+                accessibilityRole="button"
+                accessibilityLabel={isEditingSpecs ? 'Finish editing specifications' : 'Edit specifications'}
+              >
+                <Feather
+                  name={isEditingSpecs ? 'check' : 'edit-2'}
+                  size={14}
+                  color={theme.colors.cobalt}
+                />
+                <Text style={styles.editSpecsButtonText}>{isEditingSpecs ? 'Done' : 'Edit'}</Text>
+              </TouchableOpacity>
+            </View>
+            {visibleSpecs.map((spec, index) => (
               <View
                 key={spec.id}
                 style={[styles.specRow, index === 0 && { borderTopWidth: 0 }]}
               >
-                <Text style={styles.specLabel}>{spec.label}</Text>
-                <Text style={styles.specValue}>{spec.value}</Text>
+                {isEditingSpecs ? (
+                  <View style={styles.specEditRow}>
+                    <TextInput
+                      style={styles.specLabelInput}
+                      underlineColorAndroid="transparent"
+                      value={spec.label}
+                      onChangeText={(value) => updateSpec(project.id, spec.id, 'label', value)}
+                      placeholder="Item"
+                      placeholderTextColor={theme.colors.inkLight}
+                      accessibilityLabel={`Specification ${index + 1} name`}
+                    />
+                    <TextInput
+                      style={styles.specValueInput}
+                      underlineColorAndroid="transparent"
+                      value={spec.value}
+                      onChangeText={(value) => updateSpec(project.id, spec.id, 'value', value)}
+                      placeholder="Add a value"
+                      placeholderTextColor={theme.colors.inkLight}
+                      accessibilityLabel={`Specification ${index + 1} value`}
+                    />
+                    <TouchableOpacity
+                      style={styles.removeSpecButton}
+                      onPress={() => deleteSpec(project.id, spec.id)}
+                      accessibilityLabel={`Remove specification ${index + 1}`}
+                    >
+                      <Feather name="x" size={16} color={theme.colors.warning} />
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <>
+                    <Text style={styles.specLabel}>{spec.label}</Text>
+                    <Text style={styles.specValue}>{spec.value}</Text>
+                  </>
+                )}
               </View>
             ))}
+            {isEditingSpecs && (
+              <TouchableOpacity
+                style={styles.addSpecTrigger}
+                onPress={() => addSpec(project.id)}
+                accessibilityRole="button"
+                accessibilityLabel="Add specification"
+              >
+                <Feather name="plus" size={16} color={theme.colors.cobalt} />
+                <Text style={styles.addSpecTriggerText}>Add specification</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </ScrollView>
 
@@ -433,22 +480,16 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  heroToggle: {
-    position: 'absolute',
-    bottom: 8,
-    right: 8,
-    backgroundColor: theme.colors.ink,
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    flexDirection: 'row',
+  heroPlaceholder: {
+    flex: 1,
     alignItems: 'center',
-    gap: 5,
+    justifyContent: 'center',
+    gap: 8,
   },
-  heroToggleText: {
-    color: theme.colors.paper,
-    fontSize: 11,
-    fontWeight: '700',
+  heroPlaceholderText: {
+    color: theme.colors.inkLight,
+    fontSize: 14,
+    fontWeight: '600',
   },
   inkModule: {
     borderWidth: theme.borders.ink.borderWidth,
@@ -562,6 +603,8 @@ const styles = StyleSheet.create({
   addChecklistInput: {
     flex: 1,
     height: 38,
+    outlineWidth: 0,
+    outlineColor: 'transparent',
     backgroundColor: theme.colors.pale,
     borderRadius: 6,
     borderWidth: 1,
@@ -632,6 +675,10 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     borderTopWidth: 1,
     borderTopColor: theme.colors.rule,
+    alignItems: 'center',
+  },
+  specModuleHeader: {
+    marginBottom: 8,
   },
   specLabel: {
     width: 90,
@@ -643,6 +690,71 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     color: theme.colors.ink,
+  },
+  editSpecsButton: {
+    minHeight: 34,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: theme.colors.rule,
+    borderRadius: 6,
+  },
+  editSpecsButtonText: {
+    color: theme.colors.cobalt,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  specEditRow: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  specLabelInput: {
+    width: 90,
+    minHeight: 38,
+    outlineWidth: 0,
+    outlineColor: 'transparent',
+    borderWidth: 1,
+    borderColor: theme.colors.rule,
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    color: theme.colors.ink,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  specValueInput: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 38,
+    outlineWidth: 0,
+    outlineColor: 'transparent',
+    borderWidth: 1,
+    borderColor: theme.colors.rule,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    color: theme.colors.ink,
+    fontSize: 13,
+  },
+  removeSpecButton: {
+    padding: 6,
+  },
+  addSpecTrigger: {
+    minHeight: 38,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.rule,
+    marginTop: 4,
+    paddingTop: 8,
+  },
+  addSpecTriggerText: {
+    color: theme.colors.cobalt,
+    fontSize: 14,
+    fontWeight: '700',
   },
   notFound: {
     flex: 1,

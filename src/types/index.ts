@@ -10,7 +10,7 @@ export interface SpecItem {
   value: string;
 }
 
-export type LogType = 'new-part' | 'repair' | 'inspection' | 'note';
+export type LogType = 'new-part' | 'repair' | 'inspection' | 'note' | 'car-photo';
 export type DeviceLogType = 'local-photo' | 'reference';
 
 export interface PhotoItem {

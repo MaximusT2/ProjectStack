@@ -67,10 +67,9 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({ visible, onClo
         { id: `s-${Date.now()}-2`, label: 'Oil', value: '5W-40 Synthetic' },
         { id: `s-${Date.now()}-3`, label: 'Coolant', value: '50/50 Mix' },
         { id: `s-${Date.now()}-4`, label: 'Tires', value: 'Performance Street' },
-        { id: `s-${Date.now()}-5`, label: 'Fuel', value: '98 Octane' },
-        { id: `s-${Date.now()}-6`, label: 'Parts sources', value: 'Local & Online' },
       ],
       photos: [],
+      expenses: [],
     };
 
     onAdd(newProject);
@@ -111,6 +110,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({ visible, onClo
             <Text style={styles.fieldLabel}>Project Car Title *</Text>
             <TextInput
               style={styles.textInput}
+              underlineColorAndroid="transparent"
               placeholder="e.g. Nissan Silvia S15 Spec-R"
               placeholderTextColor={theme.colors.inkLight}
               value={title}
@@ -156,6 +156,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({ visible, onClo
             <Text style={styles.fieldLabel}>Next Immediate Action</Text>
             <TextInput
               style={styles.textInput}
+              underlineColorAndroid="transparent"
               placeholder="e.g. Turbo manifold fitment"
               placeholderTextColor={theme.colors.inkLight}
               value={nextAction}
@@ -167,6 +168,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({ visible, onClo
             <Text style={styles.fieldLabel}>Engine / Drivetrain</Text>
             <TextInput
               style={styles.textInput}
+              underlineColorAndroid="transparent"
               placeholder="e.g. SR20DET 6-Speed Manual"
               placeholderTextColor={theme.colors.inkLight}
               value={engine}
@@ -178,6 +180,7 @@ export const AddProjectModal: React.FC<AddProjectModalProps> = ({ visible, onClo
             <Text style={styles.fieldLabel}>Current Total Spent ($)</Text>
             <TextInput
               style={styles.textInput}
+              underlineColorAndroid="transparent"
               placeholder="e.g. 4500"
               placeholderTextColor={theme.colors.inkLight}
               keyboardType="numeric"
@@ -264,6 +267,8 @@ const styles = StyleSheet.create({
   },
   textInput: {
     height: 48,
+    outlineWidth: 0,
+    outlineColor: 'transparent',
     backgroundColor: theme.colors.pale,
     borderWidth: 1.5,
     borderColor: theme.colors.ink,
